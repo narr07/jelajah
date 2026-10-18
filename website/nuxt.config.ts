@@ -7,6 +7,8 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/main.css'],
 
 	app: {
+		// Set at build time so Nuxt and the Nitro prerenderer agree on it (GitHub Pages: /jelajah/).
+		baseURL: process.env.NUXT_APP_BASE_URL || '/',
 		head: {
 			link: [
 				{ rel: 'icon', type: 'image/svg+xml', href: 'logo.svg' },
