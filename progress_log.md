@@ -257,3 +257,15 @@ Disetujui pengguna. Project belum di bawah git, jadi file yang dihapus tidak bis
 ### Verifikasi
 - `cargo test --lib`: 4 lulus (TreeSize, name index, ikon shell 32 px + alpha, OCR end-to-end).
 - `vue-tsc`: tidak ada error baru.
+
+---
+
+## Log 2026-10-18 (lanjutan) — Nama Jelajah, ikon, repo baru
+
+- Nama aplikasi: **Jelajah** (`com.narr07.jelajah`, versi 0.1.0), repo <https://github.com/narr07/jelajah>. Nama diganti di `tauri.conf.json`, `Cargo.toml` (lib `jelajah_lib`), `package.json`, `nuxt.config.ts`, dan workflow rilis.
+- Installer NSIS di-set **per-machine** (syarat keamanan Fast Index).
+- Ikon baru: map folder hijau-teal dengan jarum kompas (`app-icon.svg`). Semua ukuran dibuat dengan `bun tauri icon app-icon.svg`.
+- README baru. Dokumen dan gambar template dihapus (`README.zh-CN.md`, `preview.md`, `public/*`). Bundle frontend turun dari 3,3 MB ke 1,5 MB.
+- `.claude/` (ter-commit oleh template) dikeluarkan dari repo dan masuk `.gitignore`.
+- Riwayat git dimulai bersih (riwayat template dihapus). Kredit template tetap ada di LICENSE dan README. Binary tgrep 1.0.8 ikut di-commit.
+- PRD: tabel PowerToys diperbarui dari daftar `src/modules` terbaru (termasuk AltWindowCycle, GrabAndMove, PowerDisplay sebagai modul level sistem).
