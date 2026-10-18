@@ -1,0 +1,24 @@
+node_modules
+node-compile-cache
+.DS_Store
+*.log*
+.data
+.nuxt
+.nitro
+.cache
+.output
+.llm-memory
+.pnpm-store
+.env
+.env.*
+!.env.example
+.cargo
+dist
+src-tauri/target
+.eslintcache
+tsx-*
+.idea
+
+# AI tool files and local backups
+.claude/
+*.bak

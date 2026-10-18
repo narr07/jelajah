@@ -1,0 +1,43 @@
+{
+	// Use eslint as default formatter
+	"editor.formatOnSave": false,
+
+	// Use workspace TypeScript (typescript-native-bridge, tsgo-backed)
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
+	"js/ts.tsdk.promptToUseWorkspaceVersion": true,
+
+	// Tailwind compatibility
+	"tailwindCSS.validate": true,
+	"tailwindCSS.experimental.classRegex": [
+		["ui:\\s*{([^)]*)\\s*}", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+	],
+	"tailwindCSS.classAttributes": [
+		"class",
+		"ui"
+	],
+	"files.associations": {
+		"*.css": "tailwindcss"
+	},
+	"editor.quickSuggestions": {
+		"strings": "on"
+	},
+
+	// Auto fix
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit",
+		"source.organizeImports": "never"
+	},
+
+	// Enable eslint for all supported languages
+	"eslint.validate": [
+		"javascript",
+		"typescript",
+		"vue",
+		"html",
+		"markdown",
+		"json",
+		"jsonc",
+		"yaml",
+		"toml"
+	]
+}

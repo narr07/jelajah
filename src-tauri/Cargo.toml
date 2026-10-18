@@ -1,0 +1,43 @@
+[package]
+name = "jelajah"
+version = "0.1.0"
+description = "Fast, light Windows file explorer with PowerToys tools, TreeSize and Everything-style search"
+authors = ["narr07"]
+license = "MIT"
+repository = "https://github.com/narr07/jelajah"
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "jelajah_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.4", features = ["tray-icon", "protocol-asset"] }
+tauri-plugin-shell = "2.5.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+base64 = "0.22"
+rayon = "1.10"
+memchr = "2"
+sha2 = "0.10"
+md-5 = "0.10"
+sha1 = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_RestartManager", "Win32_UI_Shell", "Win32_Storage_FileSystem", "Win32_Security", "Win32_System_IO", "Win32_System_Ioctl", "Win32_System_Threading", "Win32_System_Registry", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"] }
+# COM shell interfaces (native context menu); already in the tree via Tauri.
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Com", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_WindowsAndMessaging"] }
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

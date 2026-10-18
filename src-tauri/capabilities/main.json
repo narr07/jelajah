@@ -1,0 +1,12 @@
+{
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "main",
+	"description": "Capabilities shared by every platform",
+	"windows": [
+		"main",
+		"secondary"
+	],
+	"permissions": [
+		"core:default"
+	]
+}

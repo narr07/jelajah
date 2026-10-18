@@ -1,0 +1,70 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"windows": {
+			"certificateThumbprint": null,
+			"digestAlgorithm": "sha256",
+			"timestampUrl": "",
+			"nsis": {
+				"installMode": "perMachine"
+			}
+		},
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"resources": [],
+		"externalBin": [
+			"binaries/tgrep"
+		],
+		"copyright": "Copyright (c) 2026 narr07",
+		"category": "Utility",
+		"shortDescription": "Fast, light Windows file explorer",
+		"longDescription": "Fast, light Windows file explorer with PowerToys tools, TreeSize and Everything-style search",
+		"macOS": {},
+		"linux": {
+			"deb": {}
+		},
+		"iOS": {
+			"minimumSystemVersion": "15.0"
+		}
+	},
+	"build": {
+		"beforeBuildCommand": "bun run generate",
+		"frontendDist": "../dist",
+		"beforeDevCommand": "bun run dev",
+		"devUrl": "http://localhost:3000"
+	},
+	"productName": "Jelajah",
+	"version": "0.1.0",
+	"identifier": "com.narr07.jelajah",
+	"plugins": {},
+	"app": {
+		"windows": [
+			{
+				"label": "main",
+				"title": "Jelajah",
+				"width": 1366,
+				"height": 768,
+				"minWidth": 375,
+				"minHeight": 600,
+				"resizable": true,
+				"fullscreen": false
+			}
+		],
+		"security": {
+			"csp": null,
+			"assetProtocol": {
+				"enable": true,
+				"scope": [
+					"**"
+				]
+			}
+		}
+	}
+}

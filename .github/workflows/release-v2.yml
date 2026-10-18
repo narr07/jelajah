@@ -1,0 +1,106 @@
+name: release-v2
+
+# Multi-platform release: desktop (macOS, Linux, Windows, x64 + arm64) and Android.
+# iOS is left out: it requires a paid Apple Developer account and App Store Connect API keys.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: ubuntu-24.04-arm
+            args: ""
+          - platform: windows-latest
+            args: ""
+          - platform: windows-11-arm
+            args: ""
+          - platform: ubuntu-latest
+            args: ""
+            mobile: android
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v6
+
+      # Node
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Rust
+      - name: Install Rust stable (desktop)
+        if: matrix.mobile == ''
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Install Rust stable (android)
+        if: matrix.mobile == 'android'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          workspaces: ./src-tauri -> target
+
+      # Android
+      - name: Set up JDK
+        if: matrix.mobile == 'android'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Set up Android SDK
+        if: matrix.mobile == 'android'
+        uses: android-actions/setup-android@v4
+
+      - name: Set up Android NDK
+        if: matrix.mobile == 'android'
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r29
+          link-to-sdk: true
+
+      # Linux system dependencies
+      - name: Install dependencies (ubuntu only)
+        if: matrix.mobile == '' && startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        with:
+          tagName: jelajah-v__VERSION__
+          releaseName: Jelajah v__VERSION__
+          releaseBody: After installing the Apple app you have to run "xattr -c /Applications/Jelajah.app" once before launching
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+          retryAttempts: 1
+          uploadWorkflowArtifacts: true
+          mobile: ${{ matrix.mobile }}

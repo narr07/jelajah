@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+	<!-- Jelajah: a folder with a compass. Source for `bun tauri icon app-icon.svg`. -->
+	<defs>
+		<linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#0f766e" />
+			<stop offset="1" stop-color="#134e4a" />
+		</linearGradient>
+		<linearGradient id="front" x1="0" y1="0" x2="0.6" y2="1">
+			<stop offset="0" stop-color="#34d399" />
+			<stop offset="1" stop-color="#0d9488" />
+		</linearGradient>
+		<linearGradient id="north" x1="1" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#fef3c7" />
+			<stop offset="1" stop-color="#fbbf24" />
+		</linearGradient>
+	</defs>
+
+	<!-- back panel with tab -->
+	<path d="M96 248a72 72 0 0 1 72-72h228a72 72 0 0 1 51 21l59 59h350a72 72 0 0 1 72 72v460a72 72 0 0 1-72 72H168a72 72 0 0 1-72-72Z" fill="url(#back)" />
+	<!-- front panel -->
+	<rect x="96" y="352" width="832" height="508" rx="72" fill="url(#front)" />
+	<!-- top highlight -->
+	<rect x="96" y="352" width="832" height="10" rx="5" fill="#a7f3d0" opacity="0.7" />
+
+	<!-- compass ring -->
+	<circle cx="512" cy="606" r="172" fill="none" stroke="#ffffff" stroke-width="30" opacity="0.95" />
+	<!-- needle: amber north, white south -->
+	<path d="M652 466 L551 645 L473 567 Z" fill="url(#north)" />
+	<path d="M372 746 L473 567 L551 645 Z" fill="#ffffff" />
+	<circle cx="512" cy="606" r="22" fill="#134e4a" />
+</svg>
