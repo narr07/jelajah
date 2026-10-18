@@ -152,9 +152,22 @@ export const useExplorerApi = () => {
 	const newplusCreate = (template: string, destDir: string) => invoke<string>('newplus_create', { template, destDir });
 	const ocrImage = (path: string) => invoke<string>('ocr_image', { path });
 	const fileIcon = (path: string, isDir: boolean) => invoke<string | null>('file_icon', { path, isDir });
+	/** Explorer's thumbnail (Office/PDF first page, video frame, folder contents, big icon). */
+	const fileThumbnail = (path: string, size: number) => invoke<string | null>('file_thumbnail', { path, size });
 	/** Explorer's own context menu at the cursor ("Show more options"). */
 	const shellContextMenu = (path: string) => invoke<void>('shell_context_menu', { path });
 	const showProperties = (path: string) => invoke<void>('show_properties', { path });
+
+	type Rect = { x: number; y: number; w: number; h: number };
+	/** Windows preview handler (Office, ...) drawn natively over a webview rect (CSS px). false = none. */
+	const previewOpen = (path: string, r: Rect) => invoke<boolean>('preview_open', { path, ...r });
+	const previewMove = (r: Rect) => invoke<void>('preview_move', { ...r });
+	const previewClose = () => invoke<void>('preview_close');
+
+	/** Explorer's "Open with": recommended apps, launching one, or Windows' own app picker. */
+	const openWithList = (path: string) => invoke<{ name: string; icon: string | null }[]>('open_with_list', { path });
+	const openWithInvoke = (path: string, app: string) => invoke<void>('open_with_invoke', { path, app });
+	const openWithDialog = (path: string) => invoke<void>('open_with_dialog', { path });
 
 	// ---- Elevated MFT helper for the name index (src-tauri/src/fast_index.rs) ----
 	const fastIndexStatus = () => invoke<boolean>('fast_index_status');
@@ -165,8 +178,15 @@ export const useExplorerApi = () => {
 		newplusCreate,
 		ocrImage,
 		fileIcon,
+		fileThumbnail,
 		shellContextMenu,
 		showProperties,
+		previewOpen,
+		previewMove,
+		previewClose,
+		openWithList,
+		openWithInvoke,
+		openWithDialog,
 		fastIndexStatus,
 		setFastIndex,
 		listDirectory,

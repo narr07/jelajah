@@ -29,7 +29,9 @@ File manager Windows yang **cepat, ringan, dan kecil**, dengan tampilan dan peri
 | Ctrl+L / Alt+D fokus ke address bar, F3/Ctrl+F fokus ke search | ⏳ |
 | Rename inline di list (bukan `prompt()`) | ⏳ |
 | Ikon file asli dari shell (SHGetFileInfo) | ✅ (thumbnail gambar ⏳) |
-| Context menu shell asli ("Show more options", Shift+F10) | ✅ (submenu Send to/Open with ⏳) |
+| Context menu shell asli ("Show more options", Shift+F10) | ✅ (submenu Send to ⏳) |
+| Open with: aplikasi rekomendasi + "Choose another app" | ✅ |
+| Open in Terminal (Windows Terminal) dan tombol back/forward mouse | ✅ |
 | Dialog Properties asli Windows (Alt+Enter) | ✅ |
 | Drag & drop ke/dari aplikasi lain | ⏳ |
 | Tab, panel navigasi, preview pane, details pane | ✅ |
@@ -42,7 +44,7 @@ Sumber: daftar `src/modules` di <https://github.com/microsoft/PowerToys> (dicek 
 
 | Modul | Di Jelajah | Status |
 |---|---|---|
-| Peek | Quick Peek (Space): kode, gambar, markdown, PDF, video, audio | ✅ |
+| Peek | Seperti Quick Look: Space buka/tutup; kode, gambar, markdown, PDF, video, audio, dan thumbnail Explorer untuk tipe lain (Office, folder, dll.) | ✅ (Office/PDF via preview handler Windows ✅) |
 | File Explorer add-ons (`previewpane`) | Preview pane: gambar, PDF, video, audio, teks | ✅ (thumbnail di daftar file, STL/G-code/QOI ⏳) |
 | PowerRename | Ctrl+M: regex, casing, penomoran, preview | ✅ |
 | Image Resizer | Preset dan custom, WebP/JPEG/PNG | ✅ |

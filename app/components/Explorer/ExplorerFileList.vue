@@ -255,7 +255,6 @@
 		clearSelection,
 		openItem,
 		loadDirectory,
-		togglePeek,
 		navigateSelection,
 		gitStatus
 	} = useExplorer();
@@ -338,9 +337,6 @@
 		if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			selectAll();
-		} else if (e.code === 'Space') {
-			e.preventDefault();
-			togglePeek();
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
 			navigateSelection('up');

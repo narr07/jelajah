@@ -16,6 +16,11 @@
 @layer base {
 	html {
 		-webkit-tap-highlight-color: transparent;
+		color-scheme: light;
+	}
+	/* Native scrollbars and form controls follow the theme (light scrollbars glare in dark mode). */
+	html.dark {
+		color-scheme: dark;
 	}
 }
 
@@ -32,6 +37,13 @@
 	}
 	.absolute-center-v {
 		@apply top-1/2 transform -translate-y-1/2;
+	}
+	/* Scrollable but without a visible bar (tab strip, breadcrumb). */
+	.no-scrollbar {
+		scrollbar-width: none;
+	}
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
 	}
 }
 

@@ -160,7 +160,21 @@
 							</div>
 						</div>
 
-						<!-- 3. Folder Summary -->
+						<!-- 3. Office & co: Windows draws the file's preview handler over this box -->
+						<div v-else-if="useNative" ref="nativeHost" class="w-full h-[60vh] rounded-xl bg-white">
+							<div v-if="!nativeShown" class="w-full h-full flex items-center justify-center text-neutral-400">
+								<UIcon name="lucide:loader-2" class="w-7 h-7 animate-spin" />
+							</div>
+						</div>
+
+						<!-- 4. Everything else, Quick Look style: Explorer's thumbnail (first page of
+						     a document, a video frame, folder contents, or the 256 px icon) -->
+						<div v-else-if="thumbnail" class="flex flex-col items-center gap-3 max-w-full">
+							<img :src="thumbnail" :alt="currentItem.name" class="max-w-full max-h-[56vh] object-contain drop-shadow-xl" draggable="false">
+							<p class="text-xs text-neutral-500 dark:text-neutral-400 font-mono break-all text-center max-w-lg">{{ currentItem.path }}</p>
+						</div>
+
+						<!-- 5. Folder Summary (while its thumbnail loads) -->
 						<div v-else-if="currentItem.is_dir" class="text-center p-8 max-w-md">
 							<div class="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-amber-50 dark:bg-amber-950/40 text-amber-500 shadow-sm border border-amber-200/50 dark:border-amber-900/50">
 								<UIcon name="lucide:folder" class="w-8 h-8" />
@@ -240,11 +254,71 @@
 		loadDirectory
 	} = useExplorer();
 
+	const api = useExplorerApi();
 	const modalRoot = ref<HTMLElement | null>(null);
 	const showRenderedMarkdown = ref(true);
 	const copiedText = ref(false);
 
 	const currentItem = computed(() => selectedItem.value);
+
+	// Quick Look for everything else, in order:
+	// 1. the type's Windows preview handler (Office, ...), drawn natively over `nativeHost`
+	// 2. Explorer's thumbnail (first page, video frame, folder contents, big icon)
+	const thumbnail = ref<string | null>(null);
+	const nativeHost = ref<HTMLElement | null>(null);
+	const useNative = ref(false); // render the host box
+	const nativeShown = ref(false); // a handler is drawing in it
+	let resizeObs: ResizeObserver | null = null;
+
+	const rectOf = (el: HTMLElement) => {
+		const r = el.getBoundingClientRect();
+		return { x: r.left, y: r.top, w: r.width, h: r.height };
+	};
+	const syncNative = () => {
+		if (nativeShown.value && nativeHost.value) api.previewMove(rectOf(nativeHost.value));
+	};
+	const closeNative = () => {
+		if (useNative.value || nativeShown.value) api.previewClose();
+		useNative.value = false;
+		nativeShown.value = false;
+		resizeObs?.disconnect();
+		resizeObs = null;
+	};
+
+	watch([currentItem, activePreview, previewLoading, isPeekOpen], async () => {
+		thumbnail.value = null;
+		closeNative();
+		const item = currentItem.value;
+		const p = activePreview.value;
+		if (!isPeekOpen.value || !item || previewLoading.value) return;
+		if (!item.is_dir && (p?.media || (p && !p.is_binary && p.preview))) return;
+		const stale = () => !isPeekOpen.value || currentItem.value?.path !== item.path;
+
+		if (!item.is_dir) {
+			useNative.value = true;
+			await nextTick();
+			await new Promise(r => setTimeout(r, 180)); // let the open animation finish: the rect must be final
+			if (stale() || !nativeHost.value) return;
+			const ok = await api.previewOpen(item.path, rectOf(nativeHost.value)).catch(() => false);
+			if (stale()) return;
+			if (ok) {
+				nativeShown.value = true;
+				resizeObs = new ResizeObserver(syncNative);
+				resizeObs.observe(nativeHost.value);
+				return;
+			}
+			useNative.value = false; // no handler for this type
+		}
+
+		const size = Math.min(1024, Math.round(480 * (window.devicePixelRatio || 1)));
+		const url = await api.fileThumbnail(item.path, size).catch(() => null);
+		if (!stale()) thumbnail.value = url;
+	});
+	onMounted(() => window.addEventListener('resize', syncNative));
+	onBeforeUnmount(() => {
+		window.removeEventListener('resize', syncNative);
+		closeNative();
+	});
 
 	const lineCount = computed(() => {
 		if (activePreview.value && !activePreview.value.is_binary && activePreview.value.preview) {
@@ -262,7 +336,7 @@
 	});
 
 	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Escape' || e.code === 'Space') {
+		if (e.key === 'Escape') { // Space is handled globally in pages/index.vue (toggle)
 			e.preventDefault();
 			isPeekOpen.value = false;
 		} else if (e.key === 'ArrowUp') {

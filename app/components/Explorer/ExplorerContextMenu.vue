@@ -55,6 +55,50 @@
 					<span class="text-[10px] text-neutral-400">Enter</span>
 				</button>
 
+				<!-- Open with: Windows' recommended apps + "Choose another app" (Explorer parity) -->
+				<div
+					v-if="targetItem && !targetItem.is_dir"
+					class="relative"
+					@mouseenter="showOpenWith"
+					@mouseleave="openWithVisible = false"
+				>
+					<button
+						class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-left transition-colors"
+						@click="showOpenWith"
+					>
+						<div class="flex items-center gap-2.5">
+							<UIcon name="lucide:app-window" class="w-4 h-4 text-neutral-500" />
+							<span>Open with</span>
+						</div>
+						<UIcon name="lucide:chevron-right" class="w-3.5 h-3.5 text-neutral-400" />
+					</button>
+					<div
+						v-if="openWithVisible"
+						class="absolute top-0 min-w-56 max-w-72 p-1.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/80 shadow-xl"
+						:class="flyoutLeft ? 'right-full mr-1' : 'left-full ml-1'"
+					>
+						<div v-if="openWithApps === null" class="px-2.5 py-1.5 text-neutral-400">Loading…</div>
+						<button
+							v-for="app in openWithApps || []"
+							:key="app.name"
+							class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-left transition-colors"
+							@click="handleOpenWith(app.name)"
+						>
+							<img v-if="app.icon" :src="app.icon" alt="" class="w-4 h-4 shrink-0" draggable="false">
+							<UIcon v-else name="lucide:app-window" class="w-4 h-4 shrink-0 text-neutral-500" />
+							<span class="truncate">{{ app.name }}</span>
+						</button>
+						<div v-if="openWithApps?.length" class="my-1 border-t border-neutral-100 dark:border-neutral-700/60" />
+						<button
+							class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-left transition-colors"
+							@click="handleChooseApp"
+						>
+							<UIcon name="lucide:layout-grid" class="w-4 h-4 text-neutral-500" />
+							<span>Choose another app</span>
+						</button>
+					</div>
+				</div>
+
 				<button
 					v-if="targetItem"
 					class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-left transition-colors font-medium text-primary-600 dark:text-primary-400"
@@ -296,6 +340,29 @@
 	const handlePasteAsFile = async () => {
 		emit('close');
 		await pasteAsFile();
+	};
+
+	// Open with: list loads on first hover (one shell query, icons included).
+	const openWithVisible = ref(false);
+	const openWithApps = ref<{ name: string; icon: string | null }[] | null>(null);
+	const flyoutLeft = computed(() => props.x + 2 * 240 > window.innerWidth);
+	const showOpenWith = async () => {
+		openWithVisible.value = true;
+		if (openWithApps.value === null && props.targetItem) {
+			openWithApps.value = await api.openWithList(props.targetItem.path).catch(() => []);
+		}
+	};
+	const handleOpenWith = (app: string) => {
+		emit('close');
+		if (props.targetItem) {
+			api.openWithInvoke(props.targetItem.path, app).catch((e: Error) => toast.add({ title: 'Open with', description: e.message, color: 'error' }));
+		}
+	};
+	const handleChooseApp = () => {
+		emit('close');
+		if (props.targetItem) {
+			api.openWithDialog(props.targetItem.path).catch((e: Error) => toast.add({ title: 'Open with', description: e.message, color: 'error' }));
+		}
 	};
 
 	const handleOpen = () => {

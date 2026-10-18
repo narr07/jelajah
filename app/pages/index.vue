@@ -169,10 +169,11 @@
 
 		if (isInput) return;
 
-		// PowerToys Quick Peek shortcut: Spacebar
-		if (e.code === 'Space' && !isPeekOpen.value && !isPowerRenameOpen.value && !isCommandPaletteOpen.value && !isTreeSizeOpen.value && !isHashModalOpen.value && !isImageResizerOpen.value) {
+		// Peek, like macOS Quick Look: Space opens, Space again closes. The only Space handler,
+		// so the key is never seen twice (Peek closing, then this reopening it).
+		if (e.code === 'Space' && !isPowerRenameOpen.value && !isCommandPaletteOpen.value && !isTreeSizeOpen.value && !isHashModalOpen.value && !isImageResizerOpen.value) {
 			e.preventDefault();
-			togglePeek();
+			if (!e.repeat) togglePeek();
 		}
 		// PowerToys PowerRename shortcut: Ctrl+M
 		else if (e.key === 'm' && (e.ctrlKey || e.metaKey)) {
@@ -241,12 +242,24 @@
 		}
 	};
 
+	// Mouse side buttons (XButton1/2) = Back/Forward, as in explorer.exe. Handled on mouseup and
+	// cancelled so the webview doesn't run its own history navigation.
+	const handleMouseNav = (e: MouseEvent) => {
+		if (e.button !== 3 && e.button !== 4) return;
+		e.preventDefault();
+		if (e.type === 'mouseup') e.button === 3 ? goBack() : goForward();
+	};
+
 	onMounted(() => {
 		initialize();
 		window.addEventListener('keydown', handleGlobalKeyDown);
+		window.addEventListener('mousedown', handleMouseNav);
+		window.addEventListener('mouseup', handleMouseNav);
 	});
 
 	onUnmounted(() => {
 		window.removeEventListener('keydown', handleGlobalKeyDown);
+		window.removeEventListener('mousedown', handleMouseNav);
+		window.removeEventListener('mouseup', handleMouseNav);
 	});
 </script>

@@ -269,3 +269,56 @@ Disetujui pengguna. Project belum di bawah git, jadi file yang dihapus tidak bis
 - `.claude/` (ter-commit oleh template) dikeluarkan dari repo dan masuk `.gitignore`.
 - Riwayat git dimulai bersih (riwayat template dihapus). Kredit template tetap ada di LICENSE dan README. Binary tgrep 1.0.8 ikut di-commit.
 - PRD: tabel PowerToys diperbarui dari daftar `src/modules` terbaru (termasuk AltWindowCycle, GrabAndMove, PowerDisplay sebagai modul level sistem).
+
+---
+
+## Log 2026-10-18 (lanjutan) — Peek seperti Quick Look macOS
+
+### Bug: Space tidak menutup Peek
+- Penyebab: Space ditangani di tiga tempat. Peek menutup dirinya, lalu event yang sama naik ke handler global di `pages/index.vue`, yang melihat Peek sudah tertutup dan membukanya lagi. FileList juga punya handler Space sendiri.
+- Perbaikan: Space hanya ditangani handler global sebagai **toggle** (buka/tutup, seperti Quick Look). Auto-repeat saat tombol ditahan diabaikan. Handler Space di Peek dan FileList dihapus.
+
+### Quick Look: semua file langsung terlihat
+- Command baru `file_thumbnail` (`tools.rs`): `IShellItemImageFactory`, mesin thumbnail yang sama dengan Explorer ("Extra large icons"). Menghasilkan halaman pertama PDF/Office, frame video, isi folder, atau ikon 256 px untuk tipe lain. Ukuran mengikuti DPI layar (maks. 1024 px).
+- Peek memakai thumbnail ini untuk semua item yang belum punya preview lebih kaya (dokumen Office, arsip, exe, folder, dll.).
+- Alpha *premultiplied* dari shell dikonversi ke straight alpha untuk BMP. Dicek visual: halaman pertama PDF dan thumbnail folder warnanya tepat.
+- Pembacaan piksel bitmap (`dib_pixels`) dipakai bersama oleh ikon dan thumbnail.
+
+### Bug: tgrep yatim setelah aplikasi dimatikan paksa
+- `tauri dev` me-restart aplikasi dengan kill paksa, sehingga `RunEvent::Exit` tidak jalan. Akibatnya `tgrep.exe` tertinggal, mengunci file, dan build berikutnya gagal "Access is denied". Hal sama terjadi kalau aplikasi crash.
+- Perbaikan: sidecar dimasukkan ke Job Object `KILL_ON_JOB_CLOSE` (`die_with_us`), sehingga Windows ikut mematikannya begitu Jelajah mati dengan cara apa pun.
+
+### Verifikasi
+- `cargo test --lib`: 5 lulus (+ `thumbnails_for_any_file`).
+- `vue-tsc`: tidak ada error baru.
+
+---
+
+## Log 2026-10-18 (lanjutan) — tgrep: index lebih ringan, log lebih bersih
+
+- Pesan `tgrep: skipping ... (os error 33)` bukan error. tgrep melewati file yang sedang dikunci aplikasi lain (mis. `.lock` milik Codex). Pesan "skipping" kini tidak lagi diteruskan ke terminal; error lain tetap tampil.
+- `tgrep serve` sekarang memakai `--exclude` untuk `AppData`, `node_modules`, `.cargo`, `.rustup`, `.npm`, `.bun`, `.nuget`, `.gradle` (konstanta `TGREP_EXCLUDE` di `lib.rs`). Ini meniru default Windows Search. Folder-folder itu besar, terus berubah, dan hampir tidak pernah dicari isinya. Pencarian **nama** file (name index) tetap mencakup semuanya.
+- Diuji: `--exclude` bekerja berdasarkan nama folder di level mana pun.
+
+---
+
+## Log 2026-10-18 (lanjutan) — Ikon baru, scrollbar dark mode
+
+- **Ikon baru** (`app-icon.svg`): tile *squircle* bergradasi zamrud ke teal, dengan mata angin bersegi (efek 3D, cahaya dari kiri atas, ujung utara amber) dan dial tipis. Menggantikan desain map folder yang terlalu mirip folder Windows. Dicek di 256 px dan 32 px, lalu semua ukuran dibuat ulang dengan `bun tauri icon app-icon.svg`.
+- **Scrollbar terang di dark mode**: class `no-scrollbar` dipakai di bar tab dan breadcrumb tapi tidak pernah didefinisikan, jadi scrollbar bawaan (terang) muncul di sebelah tombol dark mode. Class itu sekarang didefinisikan di `main.css`.
+- `color-scheme` sekarang mengikuti tema (`html.dark` → `dark`), sehingga scrollbar dan kontrol bawaan lain ikut gelap di dark mode.
+- tgrep setelah `--exclude`: index isi file **60.328 file, 809 MB** (sebelumnya 2,67 GB termasuk `AppData`).
+
+---
+
+## Log 2026-10-18 (lanjutan) — Office preview, Open with, terminal, tombol mouse
+
+- **Open in Terminal tidak jalan**: `powershell.exe` dijalankan tanpa console sendiri, sehingga saat dev ia menumpang di console `tauri dev` dan tidak terlihat. Path juga disambung ke `-Command` (folder dengan `'` bisa merusak perintah). Sekarang seperti Explorer: buka **Windows Terminal** (`wt -d <folder>`); kalau tidak ada, jendela PowerShell baru (`CREATE_NEW_CONSOLE`) dengan folder sebagai working directory.
+- **Tombol back/forward mouse** (XButton1/2) → Back/Forward, seperti explorer.exe. Navigasi history bawaan webview dibatalkan.
+- **Preview Office di Peek** (`preview_open/move/close`): memakai *preview handler* Windows (`IPreviewHandler`), komponen yang sama dengan preview pane Explorer. Handler dijalankan out-of-process (prevhost.exe) dan menggambar ke child window native di atas area Peek, mengikuti resize. Di PC pengguna tersedia handler untuk xlsx, docx, pptx, dan pdf. Urutan fallback: preview handler → thumbnail Explorer → ikon. Fokus dikembalikan ke webview setelah handler tampil, supaya Space/Esc tetap menutup Peek.
+- **Open with** di context menu: daftar aplikasi yang direkomendasikan Windows (`SHAssocEnumHandlers`) lengkap dengan ikon, plus "Choose another app" (dialog asli `SHOpenWithDialog`). Ini juga menggantikan submenu "Open with" yang kosong di "Show more options".
+
+### Verifikasi
+- `cargo test --lib`: 7 lulus (+ daftar Open with untuk `.txt` berisi Notepad, deteksi preview handler xlsx/docx/pptx/pdf).
+- `vue-tsc`: tidak ada error baru.
+- Belum diuji di aplikasi yang berjalan: tampilan preview handler, posisi child window, dan fokus keyboard.

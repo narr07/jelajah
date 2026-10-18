@@ -15,6 +15,9 @@ use tauri_plugin_shell::{process::CommandChild, ShellExt};
 
 struct TgrepServer(Mutex<Option<CommandChild>>);
 
+/// Folder names left out of the tgrep content index (filename search still covers them).
+const TGREP_EXCLUDE: &[&str] = &["AppData", "node_modules", ".cargo", ".rustup", ".npm", ".bun", ".nuget", ".gradle"];
+
 /// Last TreeSize scan, kept in memory so drilling into subfolders is instant.
 struct TreeCache(Mutex<Option<TreeScan>>);
 
@@ -494,15 +497,22 @@ fn file_action(
 			Ok(serde_json::json!({ "success": true }))
 		}
 		"openTerminal" => {
+			// Like Explorer's "Open in Terminal": Windows Terminal, else a PowerShell window.
+			// The folder is passed as a working directory / argument, never spliced into a command.
 			#[cfg(target_os = "windows")]
 			{
-				let sys_root = std::env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".to_string());
-				let ps_path = format!("{}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", sys_root);
-				let exe = if std::path::Path::new(&ps_path).exists() { ps_path } else { "powershell".to_string() };
-				Command::new(exe)
-					.args(["-NoExit", "-Command", &format!("Set-Location -LiteralPath '{}'", target_path)])
-					.spawn()
-					.map_err(|e| e.to_string())?;
+				use std::os::windows::process::CommandExt;
+				const CREATE_NEW_CONSOLE: u32 = 0x10; // own window, not our (possibly hidden) console
+				let wt = Command::new("wt.exe").args(["-d", &target_path.replace(';', "\\;")]).spawn();
+				if wt.is_err() {
+					let sys_root = std::env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".to_string());
+					Command::new(format!("{sys_root}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"))
+						.arg("-NoExit")
+						.current_dir(&target_path)
+						.creation_flags(CREATE_NEW_CONSOLE)
+						.spawn()
+						.map_err(|e| e.to_string())?;
+				}
 			}
 			#[cfg(not(target_os = "windows"))]
 			{
@@ -1080,6 +1090,33 @@ async fn search_status(app: tauri::AppHandle, root: String) -> Result<String, St
 	Ok(String::from_utf8_lossy(&out.stdout).into())
 }
 
+/// Tie a child process to our lifetime with a kill-on-close Job Object, so the tgrep daemon also
+/// dies when we crash or get killed (tauri dev restarts, Task Manager) and RunEvent::Exit never runs.
+#[cfg(windows)]
+fn die_with_us(pid: u32) {
+	use std::sync::OnceLock;
+	use windows_sys::Win32::Foundation::CloseHandle;
+	use windows_sys::Win32::System::JobObjects::*;
+	use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SET_QUOTA, PROCESS_TERMINATE};
+
+	// The job handle is never closed: the OS closes it when this process ends, killing the job.
+	static JOB: OnceLock<usize> = OnceLock::new();
+	let job = *JOB.get_or_init(|| unsafe {
+		let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+		let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+		info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+		SetInformationJobObject(job, JobObjectExtendedLimitInformation, (&raw const info).cast(), size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32);
+		job as usize
+	});
+	unsafe {
+		let h = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, 0, pid);
+		if !h.is_null() {
+			AssignProcessToJobObject(job as _, h);
+			CloseHandle(h);
+		}
+	}
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 	fast_index::run_helper_if_requested(); // `--build-index`: elevated helper, exits before any window
@@ -1107,8 +1144,15 @@ pub fn run() {
 			tools::newplus_create,
 			tools::ocr_image,
 			tools::file_icon,
+			tools::file_thumbnail,
 			tools::shell_context_menu,
-			tools::show_properties
+			tools::show_properties,
+			tools::preview_open,
+			tools::preview_move,
+			tools::preview_close,
+			tools::open_with_list,
+			tools::open_with_invoke,
+			tools::open_with_dialog
 		])
 		.setup(|app| {
 			// Filename index: build in the background, then follow every drive live.
@@ -1134,18 +1178,27 @@ pub fn run() {
 
 			let initial_root = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\".to_string());
 			if let Ok(sidecar_cmd) = app.shell().sidecar("tgrep") {
-				if let Ok((mut rx, child)) = sidecar_cmd
-					.args(["serve", &initial_root, "--watcher-queue-cap", "65536"])
-					.spawn()
-				{
+				// Content index skips app data and dev caches, like Windows Search does by default:
+				// they are huge, churn constantly and are almost never what people search for.
+				let mut args = vec!["serve", initial_root.as_str(), "--watcher-queue-cap", "65536"];
+				for dir in TGREP_EXCLUDE {
+					args.extend(["--exclude", dir]);
+				}
+				if let Ok((mut rx, child)) = sidecar_cmd.args(args).spawn() {
 					tauri::async_runtime::spawn(async move {
 						while let Some(ev) = rx.recv().await {
 							if let tauri_plugin_shell::process::CommandEvent::Stderr(l) = ev {
-								eprintln!("[tgrep] {}", String::from_utf8_lossy(&l));
+								let line = String::from_utf8_lossy(&l);
+								// Files locked by other apps are skipped by design; only show real problems.
+								if !line.contains(": skipping ") {
+									eprintln!("[tgrep] {line}");
+								}
 							}
 						}
 					});
 
+					#[cfg(windows)]
+					die_with_us(child.pid());
 					app.manage(TgrepServer(Mutex::new(Some(child))));
 				} else {
 					app.manage(TgrepServer(Mutex::new(None)));

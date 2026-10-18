@@ -1,31 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-	<!-- Jelajah: a folder with a compass. Source for `bun tauri icon app-icon.svg`. -->
+	<!-- Jelajah: a faceted compass rose on a squircle tile. Source for `bun tauri icon app-icon.svg`. -->
 	<defs>
-		<linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
-			<stop offset="0" stop-color="#0f766e" />
+		<linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#34d399" />
+			<stop offset="0.55" stop-color="#0d9488" />
 			<stop offset="1" stop-color="#134e4a" />
 		</linearGradient>
-		<linearGradient id="front" x1="0" y1="0" x2="0.6" y2="1">
-			<stop offset="0" stop-color="#34d399" />
-			<stop offset="1" stop-color="#0d9488" />
-		</linearGradient>
-		<linearGradient id="north" x1="1" y1="0" x2="0" y2="1">
-			<stop offset="0" stop-color="#fef3c7" />
-			<stop offset="1" stop-color="#fbbf24" />
-		</linearGradient>
+		<radialGradient id="glow" cx="0.3" cy="0.22" r="0.75">
+			<stop offset="0" stop-color="#ffffff" stop-opacity="0.35" />
+			<stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+		</radialGradient>
+		<filter id="lift" x="-20%" y="-20%" width="140%" height="140%">
+			<feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#022c22" flood-opacity="0.45" />
+		</filter>
 	</defs>
 
-	<!-- back panel with tab -->
-	<path d="M96 248a72 72 0 0 1 72-72h228a72 72 0 0 1 51 21l59 59h350a72 72 0 0 1 72 72v460a72 72 0 0 1-72 72H168a72 72 0 0 1-72-72Z" fill="url(#back)" />
-	<!-- front panel -->
-	<rect x="96" y="352" width="832" height="508" rx="72" fill="url(#front)" />
-	<!-- top highlight -->
-	<rect x="96" y="352" width="832" height="10" rx="5" fill="#a7f3d0" opacity="0.7" />
+	<!-- tile -->
+	<rect x="64" y="64" width="896" height="896" rx="216" fill="url(#tile)" />
+	<rect x="64" y="64" width="896" height="896" rx="216" fill="url(#glow)" />
+	<rect x="66" y="66" width="892" height="892" rx="214" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="4" />
 
-	<!-- compass ring -->
-	<circle cx="512" cy="606" r="172" fill="none" stroke="#ffffff" stroke-width="30" opacity="0.95" />
-	<!-- needle: amber north, white south -->
-	<path d="M652 466 L551 645 L473 567 Z" fill="url(#north)" />
-	<path d="M372 746 L473 567 L551 645 Z" fill="#ffffff" />
-	<circle cx="512" cy="606" r="22" fill="#134e4a" />
+	<!-- dial -->
+	<circle cx="512" cy="512" r="318" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="14" />
+	<g stroke="#ffffff" stroke-opacity="0.45" stroke-width="12" stroke-linecap="round">
+		<line x1="737" y1="287" x2="712" y2="312" />
+		<line x1="737" y1="737" x2="712" y2="712" />
+		<line x1="287" y1="737" x2="312" y2="712" />
+		<line x1="287" y1="287" x2="312" y2="312" />
+	</g>
+
+	<!-- rose: each point split into a lit and a shaded facet (light from top-left) -->
+	<g filter="url(#lift)">
+		<!-- north (amber) -->
+		<path d="M512 150 L440 440 L512 512 Z" fill="#fcd34d" />
+		<path d="M512 150 L584 440 L512 512 Z" fill="#f59e0b" />
+		<!-- east -->
+		<path d="M874 512 L584 440 L512 512 Z" fill="#ffffff" />
+		<path d="M874 512 L584 584 L512 512 Z" fill="#ccfbf1" />
+		<!-- south -->
+		<path d="M512 874 L440 584 L512 512 Z" fill="#ffffff" />
+		<path d="M512 874 L584 584 L512 512 Z" fill="#ccfbf1" />
+		<!-- west -->
+		<path d="M150 512 L440 440 L512 512 Z" fill="#ffffff" />
+		<path d="M150 512 L440 584 L512 512 Z" fill="#ccfbf1" />
+		<!-- hub -->
+		<circle cx="512" cy="512" r="34" fill="#134e4a" />
+		<circle cx="512" cy="512" r="14" fill="#ffffff" />
+	</g>
 </svg>
