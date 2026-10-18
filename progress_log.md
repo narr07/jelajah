@@ -341,3 +341,10 @@ Disetujui pengguna. Project belum di bawah git, jadi file yang dihapus tidak bis
 - Root `nuxt.config.ts` mengabaikan `website/**`.
 - Dicek visual dengan Edge headless, mode terang dan gelap.
 - Catatan: tombol Download menuju `releases/latest`, yang belum ada sampai sebuah GitHub Release dibuat.
+
+### Rilis dan deploy (2026-10-18)
+- **GitHub Release v0.1.0**: <https://github.com/narr07/jelajah/releases/tag/v0.1.0> (setup.exe 3,9 MB + MSI 5,5 MB). Installer belum ditandatangani, jadi SmartScreen akan memberi peringatan.
+- **Website live**: <https://narr07.github.io/jelajah/>, deploy otomatis lewat `.github/workflows/website.yml` setiap ada perubahan di `website/`.
+- Deploy pertama gagal karena `website/` belum punya `tsconfig.json`, sehingga build memakai tsconfig aplikasi utama yang merujuk ke `.nuxt` yang tidak ada di CI. Diperbaiki dengan `website/tsconfig.json` sendiri.
+- Catatan uji lokal: Git Bash mengubah `NUXT_APP_BASE_URL=/jelajah/` menjadi `C:/Program Files/Git/jelajah/` (konversi path MSYS). Untuk uji lokal pakai `MSYS_NO_PATHCONV=1` atau PowerShell.
+- Pembersihan: installer disalin ke `%USERPROFILE%\Downloads\Jelajah-0.1.0\`, lalu `src-tauri/target`, `node_modules`, `.nuxt`, dan `.output` (root dan website) dihapus. Build ulang: `bun install` lalu `bun tauri build`.
