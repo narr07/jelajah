@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+	--font-sans: 'Public Sans', sans-serif;
+}
+
+/* Deep teal-black instead of plain grey, echoing the icon's darkest stop (#134e4a). */
+.dark {
+	--ui-bg: #06110f;
+	--ui-bg-muted: #0b1a17;
+	--ui-bg-elevated: #0e211d;
+	--ui-bg-accented: #14302a;
+}

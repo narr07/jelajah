@@ -1,0 +1,18 @@
+{
+  "name": "jelajah-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.142",
+    "@iconify-json/simple-icons": "^1.2.99",
+    "@nuxt/ui": "^4.11.3",
+    "nuxt": "^4.6.1",
+    "tailwindcss": "^4.3.3"
+  }
+}

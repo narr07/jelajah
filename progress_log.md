@@ -322,3 +322,22 @@ Disetujui pengguna. Project belum di bawah git, jadi file yang dihapus tidak bis
 - `cargo test --lib`: 7 lulus (+ daftar Open with untuk `.txt` berisi Notepad, deteksi preview handler xlsx/docx/pptx/pdf).
 - `vue-tsc`: tidak ada error baru.
 - Belum diuji di aplikasi yang berjalan: tampilan preview handler, posisi child window, dan fokus keyboard.
+
+---
+
+## Log 2026-10-18 (lanjutan) — Build rilis + website
+
+### Build rilis 0.1.0 (`bun tauri build`)
+- `src-tauri/target/release/jelajah.exe`: 5,8 MB
+- `bundle/nsis/Jelajah_0.1.0_x64-setup.exe`: **3,9 MB** (per-machine)
+- `bundle/msi/Jelajah_0.1.0_x64_en-US.msi`: 5,5 MB
+- Disk E: sempat tinggal 175 MB. `target/debug` dan `target/check` (cache build, total ~19 GB bersama release) dihapus dulu supaya build muat. Cache ini bisa dibuat ulang.
+
+### Website (`website/`)
+- Landing page satu halaman berbasis **Nuxt UI SaaS template** (MIT, nuxt-ui-templates/saas). Nuxt Content, og-image, auth, pricing, blog, dan docs dibuang; yang dipakai hanya `@nuxt/ui`.
+- Tema mengikuti ikon: primary `emerald`, secondary `amber`, latar dark mode teal gelap (`#06110f`). Logo dan favicon memakai ikon aplikasi.
+- Isi: hero + mockup jendela Jelajah (HTML, bukan screenshot), angka performa, tiga bagian fitur (Search, Explorer parity, TreeSize) dengan ilustrasi, grid 9 alat PowerToys, **Docs** (3 langkah mulai + 14 shortcut keyboard), dan **Download** (CTA ke GitHub Releases).
+- Statis: `cd website && bun run generate` → `.output/public` (1,3 MB). Untuk GitHub Pages di `/jelajah/`: `NUXT_APP_BASE_URL=/jelajah/`. Path aset lewat `useAsset()` supaya base URL dihormati.
+- Root `nuxt.config.ts` mengabaikan `website/**`.
+- Dicek visual dengan Edge headless, mode terang dan gelap.
+- Catatan: tombol Download menuju `releases/latest`, yang belum ada sampai sebuah GitHub Release dibuat.

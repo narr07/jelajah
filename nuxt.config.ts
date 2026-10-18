@@ -6,7 +6,7 @@ export default defineNuxtConfig({
 		"nuxt-svgo"
 	],
 	ssr: false,
-	ignore: ["**/src-tauri/**"],
+	ignore: ["**/src-tauri/**", "website/**"],
 	app: {
 		head: {
 			title: "Jelajah",
